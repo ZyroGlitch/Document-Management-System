@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Client\DocumentController;
+use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
+use App\Http\Controllers\Client\DocumentController as ClientDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Home')->name('web.login');
@@ -19,15 +20,16 @@ Route::prefix('client')
     ->middleware(['auth', 'client'])
     ->group(function () {
         Route::inertia('/dashboard', 'Client/Dashboard')->name('dashboard');
-        Route::inertia('/documents', 'Client/Documents')->name('documents');
-        Route::post('/documents/store', [DocumentController::class, 'store_document'])->name('documents.store');
+        Route::get('/documents', [ClientDocumentController::class, 'documents'])->name('documents');
+        Route::post('/documents/store', [ClientDocumentController::class, 'store_document'])->name('documents.store');
     });
 
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'admin'])
     ->group(function () {
-        Route::inertia('/dashboard', 'Admin/Dashboard')->name('dashboard');
+        Route::get('/dashboard', [AdminDocumentController::class, 'list_document_approval'])->name('dashboard');
+        Route::put('/dashboard/document/approve/{id}', [AdminDocumentController::class, 'document_approve'])->name('document_approve');
     });
 
 Route::prefix('lease-admin')

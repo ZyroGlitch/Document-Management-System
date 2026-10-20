@@ -63,12 +63,12 @@ const sidebarNavByRole = {
             title: "Overview",
             items: [
                 {
-                    label: "Dashboard",
+                    label: "Request Document Approval",
                     icon: LayoutDashboard,
                     href: "/admin/dashboard",
                 },
                 {
-                    label: "Request Document Approval",
+                    label: "Tenant Document Monitoring",
                     icon: FileText,
                     href: "#",
                 },

@@ -17,13 +17,10 @@ import {
     ChevronsRight,
     CircleCheck,
     ClipboardClock,
-    Mail,
-    Phone,
     Search,
     User,
 } from "lucide-react";
 import { useState } from "react";
-import mockData from "../../../data.json";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -33,9 +30,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox";
 
 const columnHelper = createColumnHelper();
 
@@ -56,27 +61,22 @@ const columns = [
             </span>
         ),
     }),
-    columnHelper.accessor("email", {
-        cell: (info) => (
-            <span className="text-blue-600 italic">{info.getValue()}</span>
-        ),
-        header: () => (
-            <span className="flex items-center">
-                <Mail className="mr-2" size={16} /> Email
-            </span>
-        ),
-    }),
-    columnHelper.accessor("phone", {
+    columnHelper.accessor("status", {
         cell: (info) => info.getValue(),
         header: () => (
             <span className="flex items-center">
-                <Phone className="mr-2" size={16} /> Phone
+                <ClipboardClock className="mr-2" size={16} /> Status
             </span>
         ),
     }),
 ];
 
-function RequestDocumentsTable() {
+function RequestDocumentsTable({
+    documents = [],
+    showCreateRequest = false,
+    searchInputId = "document-search",
+    pageInputId = "document-page",
+}) {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
     });
@@ -89,12 +89,12 @@ function RequestDocumentsTable() {
         });
     };
 
-    const [dummyData] = useState(() => [...mockData]);
+    const tableData = Array.isArray(documents) ? documents : [];
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState("");
 
     const table = useReactTable({
-        data: dummyData,
+        data: tableData,
         columns,
         getCoreRowModel: getCoreRowModel(),
         state: {
@@ -119,11 +119,11 @@ function RequestDocumentsTable() {
         <div className="w-full">
             <div className="flex justify-between items-center mb-4">
                 <div className="flex-1 relative max-w-md">
-                    <label htmlFor="document-search" className="sr-only">
+                    <label htmlFor={searchInputId} className="sr-only">
                         Search documents
                     </label>
                     <input
-                        id="document-search"
+                        id={searchInputId}
                         value={globalFilter ?? ""}
                         onChange={(event) =>
                             setGlobalFilter(event.target.value)
@@ -138,49 +138,70 @@ function RequestDocumentsTable() {
                     />
                 </div>
 
-                <Dialog>
-                    <DialogTrigger>
-                        <Button>Create New Request</Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-[600px] max-w-[calc(100%-2rem)] sm:max-w-[800px]">
-                        <DialogHeader>
-                            <DialogTitle>Request New Document</DialogTitle>
-                            <DialogDescription className="py-2">
-                                Enter the name of the document you want to
-                                request.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit}>
-                            <Field className="mb-4">
-                                <FieldLabel htmlFor="input-field-username">
-                                    Document Name
-                                </FieldLabel>
-                                <Input
-                                    id="input-field-username"
-                                    type="text"
-                                    placeholder="ex. Gate Pass"
-                                    value={data.name}
-                                    onChange={(e) =>
-                                        setData("name", e.target.value)
-                                    }
-                                    aria-invalid={Boolean(errors.name)}
-                                />
-                                {errors.name && (
-                                    <p className="text-sm text-red-600">
-                                        {errors.name}
-                                    </p>
-                                )}
-                            </Field>
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={processing}
-                            >
-                                {processing ? "Submitting..." : "Submit"}
-                            </Button>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                {showCreateRequest && (
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>Create New Request</Button>
+                        </DialogTrigger>
+                        <DialogContent className="w-[600px] max-w-[calc(100%-2rem)] sm:max-w-[800px]">
+                            <DialogHeader>
+                                <DialogTitle>Request New Document</DialogTitle>
+                                <DialogDescription className="py-2">
+                                    Enter the name of the document you want to
+                                    request.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleSubmit}>
+                                <Field className="mb-4">
+                                    <FieldLabel htmlFor="input-field-username">
+                                        Document Name
+                                    </FieldLabel>
+                                    {/* <Input
+                                        id="input-field-username"
+                                        type="text"
+                                        placeholder="ex. Gate Pass"
+                                        value={data.name}
+                                        onChange={(e) =>
+                                            setData("name", e.target.value)
+                                        }
+                                        aria-invalid={Boolean(errors.name)}
+                                    />
+                                    {errors.name && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.name}
+                                        </p>
+                                    )} */}
+
+                                    <Combobox items={frameworks}>
+                                        <ComboboxInput placeholder="Select a framework" />
+                                        <ComboboxContent>
+                                            <ComboboxEmpty>
+                                                No items found.
+                                            </ComboboxEmpty>
+                                            <ComboboxList>
+                                                {(item) => (
+                                                    <ComboboxItem
+                                                        key={item}
+                                                        value={item}
+                                                    >
+                                                        {item}
+                                                    </ComboboxItem>
+                                                )}
+                                            </ComboboxList>
+                                        </ComboboxContent>
+                                    </Combobox>
+                                </Field>
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={processing}
+                                >
+                                    {processing ? "Submitting..." : "Submit"}
+                                </Button>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                )}
             </div>
 
             {/* Table */}
@@ -294,11 +315,11 @@ function RequestDocumentsTable() {
                     </button>
 
                     <span className="flex items-center">
-                        <label htmlFor="document-page" className="sr-only">
+                        <label htmlFor={pageInputId} className="sr-only">
                             Current page
                         </label>
                         <input
-                            id="document-page"
+                            id={pageInputId}
                             min={1}
                             max={table.getPageCount()}
                             type="number"
@@ -342,7 +363,20 @@ function RequestDocumentsTable() {
     );
 }
 
+// 2nd tab here (Approved Documents)
+function ApprovedDocumentsTable({ approved = [] }) {
+    return (
+        <RequestDocumentsTable
+            documents={approved}
+            searchInputId="approved-document-search"
+            pageInputId="approved-document-page"
+        />
+    );
+}
+
 function Documents() {
+    const { pendings = [], approved = [] } = usePage().props;
+
     return (
         <Tabs defaultValue="account" className="w-full">
             <TabsList className="p-4" variant="line">
@@ -354,11 +388,10 @@ function Documents() {
                 </TabsTrigger>
             </TabsList>
             <TabsContent value="account" className="px-4 py-2">
-                {/* Include Tanstack Table here only! */}
-                <RequestDocumentsTable />
+                <RequestDocumentsTable documents={pendings} showCreateRequest />
             </TabsContent>
             <TabsContent value="password" className="px-4 py-2">
-                Change your password here.
+                <ApprovedDocumentsTable approved={approved} />
             </TabsContent>
         </Tabs>
     );
